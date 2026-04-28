@@ -284,7 +284,7 @@
         <option value="neon">Neon Theme</option>
       </select>
       <button class="secondary" onclick="savePreset()">Speichern</button>
-      <button class="secondary" onclick="loadPreset()">Laden</button>
+      <button class="secondary" onclick="openPresetModal()">Laden</button>
     </div>
 
     <section id="pizzaList" class="pizza-list"></section>
@@ -296,8 +296,22 @@
 
     <section id="result" class="result">Bitte mindestens 2 Pizzen eingeben.</section>
     <section id="chart" class="chart"></section>
-    <div class="small">Hinweis: Angezeigte Fläche ist Angegeben ohne Pizzarand (1,5cm) </div>
+    <div class="small">Randabzug: 1,5 cm pro Seite = 3 cm weniger Durchmesser</div>
   </main>
+
+  <!-- Modal: Presets Laden -->
+  <div id="presetModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10;">
+    <div style="width:min(420px,92%);background:var(--card);border-radius:16px;padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong>Gespeicherte Pizzen</strong>
+        <button class="danger" onclick="closePresetModal()">✕</button>
+      </div>
+      <div id="presetList" style="display:grid;gap:8px;max-height:320px;overflow:auto;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="secondary" style="flex:1" onclick="closePresetModal()">Schließen</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const insults = [
@@ -526,8 +540,63 @@
       alert(`'${name}' wurde gespeichert.`);
     }
 
-    function loadPreset() {
-      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
+    function openPresetModal() {
+      const modal = document.getElementById('presetModal');
+      const list = document.getElementById('presetList');
+      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
+      list.innerHTML = '';
+
+      const names = Object.keys(presets);
+      if (names.length === 0) {
+        list.innerHTML = '<div class="small">Keine gespeicherten Sets.</div>';
+      } else {
+        names.forEach(name => {
+          const item = presets[name];
+          const card = document.createElement('div');
+          card.style.background = 'var(--box)';
+          card.style.borderRadius = '12px';
+          card.style.padding = '10px';
+
+          const preview = (item.pizzas || []).map(p => `${p.name}: ${p.diameter || '-'} cm / ${p.price || '-'} €`).join('<br>');
+
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong>${name}</strong>
+              <button class="danger" onclick="deletePreset('${name.replace(/'/g, "\'")}')">✕</button>
+            </div>
+            <div class="small" style="text-align:left;margin-bottom:8px;">${preview}</div>
+            <button onclick="applyPreset('${name.replace(/'/g, "\'")}')">Laden</button>
+          `;
+
+          list.appendChild(card);
+        });
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closePresetModal() {
+      document.getElementById('presetModal').style.display = 'none';
+    }
+
+    function applyPreset(name) {
+      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
+      const data = presets[name];
+      if (!data) return;
+      pizzas = data.pizzas || [];
+      themeSelect.value = data.theme || 'dark';
+      document.body.className = themeSelect.value === 'dark' ? '' : themeSelect.value;
+      closePresetModal();
+      render();
+    }
+
+    function deletePreset(name) {
+      if (!confirm(`'${name}' wirklich löschen?`)) return;
+      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
+      delete presets[name];
+      localStorage.setItem('pizzaRechnerPresets', JSON.stringify(presets));
+      openPresetModal();
+    }");
       const names = Object.keys(presets);
       if (names.length === 0) {
         alert("Es wurden noch keine Pizzen gespeichert.");
