@@ -150,6 +150,8 @@
     .pizza-header input {
       flex: 1;
       font-weight: bold;
+      width: 100%;
+      min-width: 0;
     }
 
     label {
@@ -161,9 +163,15 @@
 
     .field-row {
       display: grid;
-      grid-template-columns: 1.4fr 0.8fr;
+      grid-template-columns: minmax(0, 1fr) 110px;
       gap: 8px;
       min-width: 0;
+      align-items: end;
+    }
+
+    .field-row input {
+      width: 100%;
+      max-width: 100%;
     }
 
     .invalid {
@@ -253,7 +261,7 @@
 
       /* WICHTIG: Feld bleibt zweispaltig */
       .field-row {
-        grid-template-columns: 1.4fr 0.7fr;
+        grid-template-columns: minmax(0, 1fr) 90px;
       }
 
       .top-actions,
