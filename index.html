@@ -356,12 +356,22 @@
     const chart = document.getElementById("chart");
     const themeSelect = document.getElementById("themeSelect");
 
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     function randomInsult() {
       return insults[Math.floor(Math.random() * insults.length)];
     }
 
     function miniKI(ranking) {
       if (ranking.length < 2) return "";
+
       const best = ranking[0];
       const second = ranking[1];
       const diff = ((best.value - second.value) / second.value) * 100;
@@ -386,7 +396,7 @@
 
       try {
         const data = JSON.parse(saved);
-        pizzas = data.pizzas || [];
+        pizzas = Array.isArray(data.pizzas) ? data.pizzas : [];
         themeSelect.value = data.theme || "dark";
         document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
         return true;
@@ -405,6 +415,7 @@
         alert("Mindestens 2 Pizzen bleiben nötig.");
         return;
       }
+
       pizzas.splice(index, 1);
       render();
     }
@@ -426,22 +437,24 @@
       pizzas.forEach((pizza, index) => {
         const card = document.createElement("div");
         card.className = "pizza-card";
+
         card.innerHTML = `
           <div class="pizza-header">
-            <input value="${pizza.name}" oninput="updatePizza(${index}, 'name', this.value)" onkeydown="autoTab(event)">
+            <input value="${escapeHtml(pizza.name)}" oninput="updatePizza(${index}, 'name', this.value)" onkeydown="autoTab(event)">
             <button class="danger" onclick="deletePizza(${index})">✕</button>
           </div>
           <div class="field-row">
             <div>
               <label>Durchmesser (cm)</label>
-              <input class="diameter" value="${pizza.diameter}" oninput="updatePizza(${index}, 'diameter', this.value)" onkeydown="autoTab(event)">
+              <input class="diameter" value="${escapeHtml(pizza.diameter)}" oninput="updatePizza(${index}, 'diameter', this.value)" onkeydown="autoTab(event)">
             </div>
             <div>
               <label>Preis (€)</label>
-              <input class="price" value="${pizza.price}" oninput="updatePizza(${index}, 'price', this.value)" onkeydown="autoTab(event)">
+              <input class="price" value="${escapeHtml(pizza.price)}" oninput="updatePizza(${index}, 'price', this.value)" onkeydown="autoTab(event)">
             </div>
           </div>
         `;
+
         pizzaList.appendChild(card);
       });
 
@@ -492,7 +505,11 @@
       const diff = ((best.value - second.value) / second.value) * 100;
 
       result.style.color = "#00ff88";
-      result.textContent = `🏆 Beste Wahl: ${best.name}\n🍕 ${best.value.toFixed(2)} cm² Pizza pro €\n🏆 ${diff.toFixed(1)}% besser als Platz 2\n\n${miniKI(ranking)}`;
+      result.textContent = `🏆 Beste Wahl: ${best.name}
+🍕 ${best.value.toFixed(2)} cm² Pizza pro €
+🏆 ${diff.toFixed(1)}% besser als Platz 2
+
+${miniKI(ranking)}`;
 
       drawChart(ranking);
     }
@@ -505,12 +522,13 @@
       ranking.forEach((item, index) => {
         const row = document.createElement("div");
         row.className = "bar-row";
+
         const percent = Math.max(3, (item.value / max) * 100);
         const winner = index === 0 ? " winner" : "";
         const name = index === 0 ? `${item.name} 🏆` : item.name;
 
         row.innerHTML = `
-          <div class="name" title="${item.name}">${name}</div>
+          <div class="name" title="${escapeHtml(item.name)}">${escapeHtml(name)}</div>
           <div class="bar-bg${winner}">
             <div class="bar" style="width:${percent}%; background:${colors[index % colors.length]}"></div>
           </div>
@@ -534,82 +552,83 @@
     function savePreset() {
       const name = prompt("Name für diese Pizza-Auswahl:");
       if (!name) return;
+
       const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
+
+      if (presets[name] && !confirm(`'${name}' existiert schon. Überschreiben?`)) {
+        return;
+      }
+
       presets[name] = { theme: themeSelect.value, pizzas };
       localStorage.setItem("pizzaRechnerPresets", JSON.stringify(presets));
       alert(`'${name}' wurde gespeichert.`);
     }
 
     function openPresetModal() {
-      const modal = document.getElementById('presetModal');
-      const list = document.getElementById('presetList');
-      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
-      list.innerHTML = '';
-
+      const modal = document.getElementById("presetModal");
+      const list = document.getElementById("presetList");
+      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
       const names = Object.keys(presets);
+
+      list.innerHTML = "";
+
       if (names.length === 0) {
         list.innerHTML = '<div class="small">Keine gespeicherten Sets.</div>';
       } else {
-        names.forEach(name => {
+        names.forEach((name) => {
           const item = presets[name];
-          const card = document.createElement('div');
-          card.style.background = 'var(--box)';
-          card.style.borderRadius = '12px';
-          card.style.padding = '10px';
+          const card = document.createElement("div");
+          card.style.background = "var(--box)";
+          card.style.borderRadius = "12px";
+          card.style.padding = "10px";
 
-          const preview = (item.pizzas || []).map(p => `${p.name}: ${p.diameter || '-'} cm / ${p.price || '-'} €`).join('<br>');
+          const preview = (item.pizzas || [])
+            .map(p => `${escapeHtml(p.name || "Pizza")}: ${escapeHtml(p.diameter || "-")} cm / ${escapeHtml(p.price || "-")} €`)
+            .join("<br>");
 
           card.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <strong>${name}</strong>
-              <button class="danger" onclick="deletePreset('${name.replace(/'/g, "\'")}')">✕</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;">
+              <strong>${escapeHtml(name)}</strong>
+              <button class="danger">✕</button>
             </div>
             <div class="small" style="text-align:left;margin-bottom:8px;">${preview}</div>
-            <button onclick="applyPreset('${name.replace(/'/g, "\'")}')">Laden</button>
+            <button>Laden</button>
           `;
+
+          const buttons = card.querySelectorAll("button");
+          buttons[0].addEventListener("click", () => deletePreset(name));
+          buttons[1].addEventListener("click", () => applyPreset(name));
 
           list.appendChild(card);
         });
       }
 
-      modal.style.display = 'flex';
+      modal.style.display = "flex";
     }
 
     function closePresetModal() {
-      document.getElementById('presetModal').style.display = 'none';
+      document.getElementById("presetModal").style.display = "none";
     }
 
     function applyPreset(name) {
-      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
+      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
       const data = presets[name];
       if (!data) return;
-      pizzas = data.pizzas || [];
-      themeSelect.value = data.theme || 'dark';
-      document.body.className = themeSelect.value === 'dark' ? '' : themeSelect.value;
+
+      pizzas = Array.isArray(data.pizzas) ? data.pizzas : [];
+      themeSelect.value = data.theme || "dark";
+      document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
       closePresetModal();
       render();
     }
 
     function deletePreset(name) {
       if (!confirm(`'${name}' wirklich löschen?`)) return;
-      const presets = JSON.parse(localStorage.getItem('pizzaRechnerPresets') || '{}');
+
+      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
       delete presets[name];
-      localStorage.setItem('pizzaRechnerPresets', JSON.stringify(presets));
+      localStorage.setItem("pizzaRechnerPresets", JSON.stringify(presets));
       openPresetModal();
-    }");
-      const names = Object.keys(presets);
-      if (names.length === 0) {
-        alert("Es wurden noch keine Pizzen gespeichert.");
-        return;
-      }
-
-      const choice = prompt(`Welche Auswahl laden?\n\n${names.join("\n")}`);
-      if (!choice || !presets[choice]) return;
-
-      pizzas = presets[choice].pizzas || [];
-      themeSelect.value = presets[choice].theme || "dark";
-      document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
-      render();
     }
 
     function autoTab(event) {
