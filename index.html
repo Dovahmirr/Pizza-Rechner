@@ -493,7 +493,7 @@
         row.className = "bar-row";
         const percent = Math.max(3, (item.value / max) * 100);
         const winner = index === 0 ? " winner" : "";
-        const name = index === 0 ? `🏆 ${item.name}` : item.name;
+        const name = index === 0 ? `${item.name} 🏆` : item.name;
 
         row.innerHTML = `
           <div class="name" title="${item.name}">${name}</div>
