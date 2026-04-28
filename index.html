@@ -479,7 +479,7 @@
       const diff = ((best.value - second.value) / second.value) * 100;
 
       result.style.color = "#00ff88";
-      result.textContent = `🏆 Beste Wahl: ${best.name}\n🍕 ${best.value.toFixed(2)} cm²/€\n🏆 ${diff.toFixed(1)}% besser als Platz 2\n\n${miniKI(ranking)}`;
+      result.textContent = `🏆 Beste Wahl: ${best.name}\n🍕 ${best.value.toFixed(2)} cm² Pizza pro €\n🏆 ${diff.toFixed(1)}% besser als Platz 2\n\n${miniKI(ranking)}`;
 
       drawChart(ranking);
     }
