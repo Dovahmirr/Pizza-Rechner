@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pizza Rechner</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --box: #2c2c2c;
+      --input: #151515;
+      --text: #ffffff;
+      --muted: #bbbbbb;
+      --accent: #27ae60;
+      --danger: #e74c3c;
+      --canvas: #1a1a1a;
+    }
+
+    body.light {
+      --bg: #eaeaea;
+      --card: #ffffff;
+      --box: #f0f0f0;
+      --input: #ffffff;
+      --text: #111111;
+      --muted: #555555;
+      --canvas: #f7f7f7;
+    }
+
+    body.pizza {
+      --bg: #2b0f0f;
+      --card: #3a1616;
+      --box: #5c1f1f;
+      --input: #2b0f0f;
+      --text: #fff3d6;
+      --muted: #ffd27d;
+      --canvas: #241010;
+    }
+
+    body.neon {
+      --bg: #050505;
+      --card: #111111;
+      --box: #1b1b2f;
+      --input: #080808;
+      --text: #00ffcc;
+      --muted: #8888ff;
+      --canvas: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 10px;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 4px 0 12px;
+      font-size: clamp(22px, 7vw, 28px);
+    }
+
+    .top-actions,
+    .bottom-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .top-actions select {
+      grid-column: 1 / -1;
+    }
+
+    select,
+    button,
+    input {
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 16px;
+      min-width: 0;
+    }
+
+    select,
+    input {
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    button {
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      background: var(--accent);
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    button.secondary {
+      background: #34495e;
+    }
+
+    .pizza-list {
+      display: grid;
+      gap: 10px;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+    }
+
+    .pizza-card {
+      background: var(--box);
+      padding: 10px;
+      border-radius: 16px;
+      min-width: 0;
+    }
+
+    .pizza-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 6px;
+      min-width: 0;
+    }
+
+    .pizza-header input {
+      flex: 1;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 0 4px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .invalid {
+      background: #4a1f1f !important;
+    }
+
+    .result {
+      text-align: center;
+      margin: 12px 0;
+      color: #00ff88;
+      line-height: 1.4;
+      white-space: pre-line;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .chart {
+      background: var(--canvas);
+      border-radius: 16px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(52px, 74px) minmax(0, 1fr) minmax(36px, 48px);
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      min-width: 0;
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 12px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .bar-bg {
+      background: rgba(255,255,255,0.1);
+      height: 22px;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      min-width: 0;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+      min-width: 8px;
+    }
+
+    .winner {
+      outline: 2px solid rgba(255,255,255,0.85);
+      box-shadow: 0 0 14px rgba(124,255,124,0.75);
+    }
+
+    .value {
+      text-align: right;
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 6px;
+      }
+
+      .app {
+        border-radius: 16px;
+        padding: 10px;
+      }
+
+      /* WICHTIG: Feld bleibt zweispaltig */
+      .field-row {
+        grid-template-columns: 1.4fr 0.7fr;
+      }
+
+      .top-actions,
+      .bottom-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-row {
+        grid-template-columns: 58px minmax(0, 1fr) 42px;
+      }
+
+      .name,
+      .value {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>🍕 Pizza Rechner</h1>
+
+    <div class="top-actions">
+      <select id="themeSelect">
+        <option value="dark">Dark Mode</option>
+        <option value="light">Light Mode</option>
+        <option value="pizza">Pizza Theme</option>
+        <option value="neon">Neon Theme</option>
+      </select>
+      <button class="secondary" onclick="savePreset()">Speichern</button>
+      <button class="secondary" onclick="loadPreset()">Laden</button>
+    </div>
+
+    <section id="pizzaList" class="pizza-list"></section>
+
+    <div class="bottom-actions">
+      <button onclick="addPizza()">+ Größe hinzufügen</button>
+      <button class="danger" onclick="resetApp()">Reset</button>
+    </div>
+
+    <section id="result" class="result">Bitte mindestens 2 Pizzen eingeben.</section>
+    <section id="chart" class="chart"></section>
+    <div class="small">Randabzug: 1,5 cm pro Seite = 3 cm weniger Durchmesser</div>
+  </main>
+
+  <script>
+    const insults = [
+      "du überbackene Geschmackslücke.",
+      "du wandelnder Pizzakarton.",
+      "du Mozzarella-Minimalist.",
+      "du knusprig gescheiterter Rand.",
+      "du Tomatensoßen-Analphabet.",
+      "du kulinarischer Kreisverkehr.",
+      "du labbriger Teigrest.",
+      "du Parmesanverirrung.",
+      "du Snack mit Identitätskrise.",
+      "du Belagvergesser mit System.",
+      "du geschmacklich entgleister Käseklumpen.",
+      "du Rand-ohne-Inhalt.",
+      "du Salamiverwirrung.",
+      "du essbarer Fehlalarm.",
+      "du gastronomischer Wackelkandidat.",
+      "du Pimmelberger",
+      "du Pimf",
+      "du Intelligenzverweigerer",
+      "du Dirnenspross",
+      "du Kognitiver totalausfall",
+      "du Logiklegastheniker",
+      "du Auffassungsschwächling",
+      "du Vernunftflüchtling",
+      "du Geistiger Kurzschluss",
+      "du Argumentationsinvalid",
+      "du Argumentationsvermeidungsstratege",
+      "du Synapsen-Wildparker",
+      "du Denkprozessverhinderungsbeauftragter",
+      "du Premium-Edition eines Denkfehlers",
+      "du menschgewordene Fehlkalkulation",
+      "du interaktiver Denkfehler",
+      "du Synapsen-404-Fehler"
+    ];
+
+    let pizzas = [];
+
+    const pizzaList = document.getElementById("pizzaList");
+    const result = document.getElementById("result");
+    const chart = document.getElementById("chart");
+    const themeSelect = document.getElementById("themeSelect");
+
+    function randomInsult() {
+      return insults[Math.floor(Math.random() * insults.length)];
+    }
+
+    function miniKI(ranking) {
+      if (ranking.length < 2) return "";
+      const best = ranking[0];
+      const second = ranking[1];
+      const diff = ((best.value - second.value) / second.value) * 100;
+      const insult = randomInsult();
+
+      if (diff < 3) return `🤖 KinsKI: Die Pizzen sind fast gleich gut, ${insult}`;
+      if (diff < 10) return `🤖 KinsKI: ${best.name} ist leicht besser, ${insult}`;
+      if (diff < 25) return `🤖 KinsKI: ${best.name} lohnt sich deutlich mehr, ${insult}`;
+      return `🤖 KinsKI: ${best.name} ist hier absolut überlegen, ${insult}`;
+    }
+
+    function saveLast() {
+      localStorage.setItem("pizzaRechnerLast", JSON.stringify({
+        theme: themeSelect.value,
+        pizzas
+      }));
+    }
+
+    function loadLast() {
+      const saved = localStorage.getItem("pizzaRechnerLast");
+      if (!saved) return false;
+
+      try {
+        const data = JSON.parse(saved);
+        pizzas = data.pizzas || [];
+        themeSelect.value = data.theme || "dark";
+        document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function addPizza(name = `Pizza ${pizzas.length + 1}`, diameter = "", price = "") {
+      pizzas.push({ name, diameter, price });
+      render();
+    }
+
+    function deletePizza(index) {
+      if (pizzas.length <= 2) {
+        alert("Mindestens 2 Pizzen bleiben nötig.");
+        return;
+      }
+      pizzas.splice(index, 1);
+      render();
+    }
+
+    function parseNumber(value) {
+      const number = Number(String(value).replace(",", "."));
+      return Number.isFinite(number) && number > 0 ? number : null;
+    }
+
+    function updatePizza(index, field, value) {
+      pizzas[index][field] = value;
+      calculate();
+      saveLast();
+    }
+
+    function render() {
+      pizzaList.innerHTML = "";
+
+      pizzas.forEach((pizza, index) => {
+        const card = document.createElement("div");
+        card.className = "pizza-card";
+        card.innerHTML = `
+          <div class="pizza-header">
+            <input value="${pizza.name}" oninput="updatePizza(${index}, 'name', this.value)" onkeydown="autoTab(event)">
+            <button class="danger" onclick="deletePizza(${index})">✕</button>
+          </div>
+          <div class="field-row">
+            <div>
+              <label>Durchmesser (cm)</label>
+              <input class="diameter" value="${pizza.diameter}" oninput="updatePizza(${index}, 'diameter', this.value)" onkeydown="autoTab(event)">
+            </div>
+            <div>
+              <label>Preis (€)</label>
+              <input class="price" value="${pizza.price}" oninput="updatePizza(${index}, 'price', this.value)" onkeydown="autoTab(event)">
+            </div>
+          </div>
+        `;
+        pizzaList.appendChild(card);
+      });
+
+      calculate();
+      saveLast();
+    }
+
+    function calculate() {
+      const valid = [];
+      const cards = pizzaList.querySelectorAll(".pizza-card");
+
+      pizzas.forEach((pizza, index) => {
+        const diameter = parseNumber(pizza.diameter);
+        const price = parseNumber(pizza.price);
+        const card = cards[index];
+        if (!card) return;
+
+        const dInput = card.querySelector(".diameter");
+        const pInput = card.querySelector(".price");
+
+        if (!pizza.diameter && !pizza.price) {
+          dInput.classList.remove("invalid");
+          pInput.classList.remove("invalid");
+          return;
+        }
+
+        dInput.classList.toggle("invalid", diameter === null);
+        pInput.classList.toggle("invalid", price === null);
+
+        if (diameter !== null && price !== null) {
+          const effectiveDiameter = Math.max(0, diameter - 3);
+          const area = Math.PI * Math.pow(effectiveDiameter / 2, 2);
+          const value = area / price;
+          valid.push({ name: pizza.name || "Pizza", value, area, price });
+        }
+      });
+
+      if (valid.length < 2) {
+        result.textContent = "Bitte mindestens 2 vollständige Pizzen eingeben.";
+        result.style.color = "#ffcc66";
+        chart.innerHTML = "";
+        return;
+      }
+
+      const ranking = valid.sort((a, b) => b.value - a.value);
+      const best = ranking[0];
+      const second = ranking[1];
+      const diff = ((best.value - second.value) / second.value) * 100;
+
+      result.style.color = "#00ff88";
+      result.textContent = `🏆 Beste Wahl: ${best.name}\n🍕 ${best.value.toFixed(2)} cm²/€\n🏆 ${diff.toFixed(1)}% besser als Platz 2\n\n${miniKI(ranking)}`;
+
+      drawChart(ranking);
+    }
+
+    function drawChart(ranking) {
+      chart.innerHTML = "";
+      const max = ranking[0].value;
+      const colors = ["#7CFF7C", "#00a8ff", "#e84118", "#9b59b6", "#f1c40f", "#1abc9c"];
+
+      ranking.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        const percent = Math.max(3, (item.value / max) * 100);
+        const winner = index === 0 ? " winner" : "";
+        const name = index === 0 ? `🏆 ${item.name}` : item.name;
+
+        row.innerHTML = `
+          <div class="name" title="${item.name}">${name}</div>
+          <div class="bar-bg${winner}">
+            <div class="bar" style="width:${percent}%; background:${colors[index % colors.length]}"></div>
+          </div>
+          <div class="value">${item.value.toFixed(2)}</div>
+        `;
+
+        chart.appendChild(row);
+      });
+    }
+
+    function resetApp() {
+      localStorage.removeItem("pizzaRechnerLast");
+      pizzas = [
+        { name: "Kleine Pizza", diameter: "", price: "" },
+        { name: "Mittlere Pizza", diameter: "", price: "" },
+        { name: "Große Pizza", diameter: "", price: "" }
+      ];
+      render();
+    }
+
+    function savePreset() {
+      const name = prompt("Name für diese Pizza-Auswahl:");
+      if (!name) return;
+      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
+      presets[name] = { theme: themeSelect.value, pizzas };
+      localStorage.setItem("pizzaRechnerPresets", JSON.stringify(presets));
+      alert(`'${name}' wurde gespeichert.`);
+    }
+
+    function loadPreset() {
+      const presets = JSON.parse(localStorage.getItem("pizzaRechnerPresets") || "{}");
+      const names = Object.keys(presets);
+      if (names.length === 0) {
+        alert("Es wurden noch keine Pizzen gespeichert.");
+        return;
+      }
+
+      const choice = prompt(`Welche Auswahl laden?\n\n${names.join("\n")}`);
+      if (!choice || !presets[choice]) return;
+
+      pizzas = presets[choice].pizzas || [];
+      themeSelect.value = presets[choice].theme || "dark";
+      document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
+      render();
+    }
+
+    function autoTab(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const inputs = [...document.querySelectorAll("input")];
+        const index = inputs.indexOf(event.target);
+        if (index >= 0 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      }
+    }
+
+    themeSelect.addEventListener("change", () => {
+      document.body.className = themeSelect.value === "dark" ? "" : themeSelect.value;
+      saveLast();
+    });
+
+    if (!loadLast()) {
+      pizzas = [
+        { name: "Kleine Pizza", diameter: "", price: "" },
+        { name: "Mittlere Pizza", diameter: "", price: "" },
+        { name: "Große Pizza", diameter: "", price: "" }
+      ];
+    }
+
+    render();
+  </script>
+</body>
+</html>
