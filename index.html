@@ -192,7 +192,7 @@
 
     .bar-row {
       display: grid;
-      grid-template-columns: minmax(52px, 74px) minmax(0, 1fr) minmax(36px, 48px);
+      grid-template-columns: minmax(95px, 115px) minmax(0, 1fr) minmax(82px, 92px);
       align-items: center;
       gap: 6px;
       min-height: 28px;
@@ -231,7 +231,8 @@
     .value {
       text-align: right;
       font-weight: bold;
-      font-size: 12px;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     .small {
@@ -263,7 +264,7 @@
       }
 
       .bar-row {
-        grid-template-columns: 58px minmax(0, 1fr) 42px;
+        grid-template-columns: 92px minmax(0, 1fr) 82px;
       }
 
       .name,
@@ -501,7 +502,7 @@
           <div class="bar-bg${winner}">
             <div class="bar" style="width:${percent}%; background:${colors[index % colors.length]}"></div>
           </div>
-          <div class="value">${item.value.toFixed(2)}</div>
+          <div class="value">${item.value.toFixed(2)} cm² Pizza pro €</div>
         `;
 
         chart.appendChild(row);
