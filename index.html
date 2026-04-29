@@ -163,10 +163,15 @@
 
     .field-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 110px;
+      grid-template-columns: 1fr 1fr; /* beide Felder gleich groß */
       gap: 8px;
       min-width: 0;
       align-items: end;
+    }
+
+    .field-row input {
+      width: 100%;
+      max-width: 100%;
     }
 
     .field-row input {
@@ -259,9 +264,9 @@
         padding: 10px;
       }
 
-      /* WICHTIG: Feld bleibt zweispaltig */
+      /* bleibt gleich groß auch auf Mobile */
       .field-row {
-        grid-template-columns: minmax(0, 1fr) 90px;
+        grid-template-columns: 1fr 1fr;
       }
 
       .top-actions,
